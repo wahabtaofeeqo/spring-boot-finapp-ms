@@ -14,12 +14,17 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class OkResponse extends BaseResponse {
+public class ErrResponse extends BaseResponse {
     
-    private Object data;
+    private Object error;
 
-    public OkResponse(String message, Object data) {
-        super(true, message);
-        this.data = data;
+    public ErrResponse(String message) {
+        super(false, message);
     }
+    
+    public ErrResponse(String message, Object error) {
+        super(false, message);
+        this.error = error;
+    }
+    
 }

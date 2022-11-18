@@ -9,8 +9,18 @@ import com.taoltech.finapp.models.User;
 import com.taoltech.finapp.repositories.UserRepository;
 import com.taoltech.finapp.requests.LoginDTO;
 import com.taoltech.finapp.requests.RegisterDTO;
+import com.taoltech.finapp.security.JwtUtil;
+import com.taoltech.finapp.services.AccountService;
+import com.taoltech.finapp.services.UserDetailsImp;
+import java.util.HashMap;
+import java.util.Map;
+import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,26 +32,60 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author user
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("auth")
 public class AuthController extends BaseController {
     
     @Autowired
-    UserRepository repository;
+    private UserRepository repository;
     
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private AccountService accountService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private JobScheduler jobScheduler;
     
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginDTO dto) {
         
-        User user = this.repository.findByEmail(dto.getUsername());
+        /**
+         * Auth
+         * 
+         */
+        Authentication authentication;
+        try {
+            authentication = this.authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword()));
+        }
+        catch (AuthenticationException e) {
+            return this.errResponse("Username OR Password not correct", e.getMessage());
+        }
         
-        return null;
+        // Details
+        UserDetailsImp details = (UserDetailsImp) authentication.getPrincipal();
+        
+        // Token
+        String token = this.jwtUtil.generateToken(authentication);
+        
+        //
+        Map<String, Object> data = new HashMap<>();
+        data.put("access_token", token);
+        data.put("user", details.getUser());
+        return this.okResponse("Login successful", data);
     }
     
     @PostMapping("register")
     public ResponseEntity<?> register(@RequestBody RegisterDTO dto) {
-         /**
+        
+        /**
          * Prep Input
          */
         User user = dto.toUser();
@@ -50,15 +94,15 @@ public class AuthController extends BaseController {
         /**
          * Create User
          */
-        user = this.repository.save(user);
+        final User createdModel = this.repository.save(user);
         
         /**
          * Generate Account Number
          * 
          */
-        
+        jobScheduler.enqueue(() -> accountService.generate(createdModel));
         
         //
-        return this.okResponse("Account Created Successfully", user);
+        return this.okResponse("Account Created Successfully", createdModel);
     }
 }

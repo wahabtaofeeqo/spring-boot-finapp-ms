@@ -5,7 +5,6 @@
  */
 package com.taoltech.finapp.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
@@ -13,6 +12,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,26 +29,23 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "users")
-public class User implements Serializable {
+@Entity(name = "accounts")
+public class Account implements Serializable {
     
     @Id
     @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     private UUID id;
     
-    @Column
-    private String name;
-    
     @Column(unique = true)
-    private String email;
-    
-    @Column(unique = true)
-    private String phone;
+    private String number;
     
     @Column
-    @JsonIgnore
-    private String password;
+    private double balance;
+    
+    @ManyToOne()
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
     
     @UpdateTimestamp
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
@@ -56,4 +54,9 @@ public class User implements Serializable {
     @CreationTimestamp
     @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date created_at;
+    
+    public Account(String number, User user) {
+        this.user = user;
+        this.number = number;
+    }
 }
