@@ -5,13 +5,16 @@
  */
 package com.taoltech.finapp.controllers;
 
+import com.taoltech.finapp.models.Role;
 import com.taoltech.finapp.models.User;
+import com.taoltech.finapp.repositories.RoleRepository;
 import com.taoltech.finapp.repositories.UserRepository;
 import com.taoltech.finapp.requests.LoginDTO;
 import com.taoltech.finapp.requests.RegisterDTO;
 import com.taoltech.finapp.security.JwtUtil;
 import com.taoltech.finapp.services.AccountService;
 import com.taoltech.finapp.services.UserDetailsImp;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.jobrunr.scheduling.JobScheduler;
@@ -37,6 +40,9 @@ public class AuthController extends BaseController {
     
     @Autowired
     private UserRepository repository;
+    
+    @Autowired
+    private RoleRepository roleRepository;
     
     @Autowired
     private AccountService accountService;
@@ -94,6 +100,9 @@ public class AuthController extends BaseController {
         /**
          * Create User
          */
+        Role role = roleRepository.findByName("ROLE_USER");
+        
+        user.setRoles(Arrays.asList(role));
         final User createdModel = this.repository.save(user);
         
         /**

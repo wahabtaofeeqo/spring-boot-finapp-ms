@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,7 @@ public class UserController extends BaseController {
         return null;
     }
     
+    @Secured("ROLE_USER")
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable String id) {
         if(id.equalsIgnoreCase("me")) {

@@ -23,7 +23,6 @@ public class AccountService {
     AccountRepository repository;
     
     public void generate(User user) {
-        System.out.println("Called");
         while (true) {            
             String number = RandomStringUtils.randomNumeric(10);
             boolean accountExist = this.repository.existsByNumber(number);
